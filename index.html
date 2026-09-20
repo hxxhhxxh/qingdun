@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>青盾 · 转账前 15 秒 — 交互原型</title>
+<style>
+:root{
+  --ink:#070A0D;
+  --ink-2:#0D1319;
+  --panel:#101821;
+  --line:rgba(255,176,32,.16);
+  --amber:#FFB020;
+  --amber-dim:#8A6520;
+  --red:#FF3D2E;
+  --green:#33D69F;
+  --text:#E8EDF2;
+  --muted:#7C8A99;
+  --mono:"JetBrains Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  --serif:"Noto Serif SC","Source Han Serif SC","Songti SC",STSong,serif;
+  --sans:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(1100px 620px at 12% -8%, rgba(255,176,32,.13), transparent 60%),
+    radial-gradient(900px 520px at 92% 108%, rgba(255,61,46,.11), transparent 62%),
+    linear-gradient(180deg,#070A0D 0%,#080C11 100%);
+  color:var(--text);
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+  position:relative;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(circle at 50% 40%,#000 30%,transparent 82%);
+}
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.35;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;
+}
+.wrap{position:relative;z-index:2;max-width:1180px;margin:0 auto;padding:34px 22px 70px}
+
+/* ---------- header ---------- */
+header.top{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:26px}
+.brand{display:flex;align-items:center;gap:14px}
+.mark{
+  width:46px;height:46px;flex:0 0 46px;position:relative;
+  border:1.5px solid var(--amber);border-radius:50% 50% 50% 4px;
+  transform:rotate(-8deg);
+  box-shadow:0 0 0 1px rgba(255,176,32,.14),0 0 26px rgba(255,176,32,.22);
+}
+.mark::after{
+  content:"";position:absolute;inset:9px;border-radius:50% 50% 50% 2px;
+  border:1.5px solid rgba(255,176,32,.55);
+}
+.brand h1{
+  margin:0;font-family:var(--serif);font-weight:700;letter-spacing:.14em;
+  font-size:30px;line-height:1;
+}
+.brand .sub{font-family:var(--mono);font-size:11px;letter-spacing:.34em;color:var(--amber);margin-top:8px}
+.tagline{
+  margin-left:auto;text-align:right;font-family:var(--mono);font-size:11.5px;
+  color:var(--muted);line-height:1.9;letter-spacing:.06em;
+}
+.tagline b{color:var(--text);font-weight:500}
+
+/* ---------- layout ---------- */
+.grid{display:grid;grid-template-columns:minmax(320px,392px) 1fr;gap:34px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:1fr;gap:26px}}
+
+/* ---------- phone ---------- */
+.phone{
+  position:relative;background:linear-gradient(180deg,#0E151D,#0A1016);
+  border:1px solid rgba(255,255,255,.09);border-radius:38px;padding:12px;
+  box-shadow:0 40px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.05);
+}
+.phone-inner{
+  background:var(--ink-2);border-radius:28px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.05);
+  height:690px;display:flex;flex-direction:column;
+}
+.notch{height:26px;display:flex;align-items:center;justify-content:center;flex:0 0 26px}
+.notch i{width:72px;height:6px;border-radius:99px;background:rgba(255,255,255,.14)}
+.screen{flex:1;overflow-y:auto;padding:6px 18px 20px}
+.screen::-webkit-scrollbar{width:5px}
+.screen::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:9px}
+
+.appbar{display:flex;align-items:center;gap:10px;padding:8px 0 14px}
+.appbar .dot{width:7px;height:7px;border-radius:99px;background:var(--green);box-shadow:0 0 10px var(--green)}
+.appbar span{font-size:12.5px;color:var(--muted);font-family:var(--mono);letter-spacing:.08em}
+.appbar .who{margin-left:auto;font-size:12px;color:var(--muted)}
+
+.pane{display:none}
+.pane.on{display:block;animation:rise .38s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+h2.sec{font-family:var(--serif);font-size:17px;margin:6px 0 4px;letter-spacing:.02em}
+p.hint{font-size:12px;color:var(--muted);line-height:1.75;margin:0 0 14px}
+
+textarea{
+  width:100%;height:168px;resize:none;border-radius:14px;padding:13px 14px;
+  background:#0A0F15;border:1px solid rgba(255,255,255,.1);color:var(--text);
+  font-family:var(--sans);font-size:13px;line-height:1.72;outline:none;
+}
+textarea:focus{border-color:rgba(255,176,32,.5);box-shadow:0 0 0 3px rgba(255,176,32,.1)}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 16px}
+.chip{
+  font-size:11.5px;padding:6px 11px;border-radius:99px;cursor:pointer;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--muted);
+  transition:.18s;font-family:var(--mono);
+}
+.chip:hover{color:var(--amber);border-color:rgba(255,176,32,.5);background:rgba(255,176,32,.07)}
+
+.btn{
+  width:100%;padding:14px;border:0;border-radius:14px;cursor:pointer;
+  background:linear-gradient(180deg,#FFC65C,#F0A015);
+  color:#1B1200;font-weight:700;font-size:14.5px;letter-spacing:.06em;font-family:var(--sans);
+  box-shadow:0 10px 26px rgba(255,176,32,.24);transition:.18s;
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 14px 30px rgba(255,176,32,.32)}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.16);color:var(--text);box-shadow:none;font-weight:500}
+.btn.ghost:hover{border-color:rgba(255,176,32,.5);color:var(--amber)}
+.btn.danger{background:linear-gradient(180deg,#FF5A4C,#E32B1C);color:#fff;box-shadow:0 10px 26px rgba(255,61,46,.26)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+.card{
+  border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:15px 16px;
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));
+  margin-bottom:13px;
+}
+.card.alert{border-color:rgba(255,61,46,.42);background:linear-gradient(180deg,rgba(255,61,46,.1),rgba(255,61,46,.02))}
+.card.warn{border-color:rgba(255,176,32,.4);background:linear-gradient(180deg,rgba(255,176,32,.09),rgba(255,176,32,.02))}
+.card.ok{border-color:rgba(51,214,159,.35);background:linear-gradient(180deg,rgba(51,214,159,.07),rgba(51,214,159,.015))}
+.card .kt{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;color:var(--muted);margin-bottom:8px}
+.card .big{font-family:var(--serif);font-size:19px;font-weight:700;line-height:1.3}
+.card .txt{font-size:12.5px;color:#B9C6D2;line-height:1.8}
+
+.row{display:flex;gap:10px;align-items:center}
+.badge{
+  display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;
+  padding:4px 9px;border-radius:6px;border:1px solid currentColor;
+}
+.b-red{color:var(--red)}.b-amber{color:var(--amber)}.b-green{color:var(--green)}.b-muted{color:var(--muted)}
+
+ul.sig{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+ul.sig li{
+  font-family:var(--mono);font-size:11px;padding:4px 9px;border-radius:7px;
+  background:rgba(255,61,46,.12);border:1px solid rgba(255,61,46,.32);color:#FFB4AC;
+}
+.q{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px dashed rgba(255,255,255,.09)}
+.q:last-child{border-bottom:0}
+.q p{margin:0;font-size:13px;line-height:1.6;flex:1}
+.sw{display:flex;gap:6px;flex:0 0 auto}
+.sw button{
+  font-family:var(--mono);font-size:11px;padding:5px 10px;border-radius:8px;cursor:pointer;
+  background:transparent;border:1px solid rgba(255,255,255,.14);color:var(--muted);transition:.16s;
+}
+.sw button.yes.on{background:rgba(255,61,46,.16);border-color:rgba(255,61,46,.6);color:#FFB4AC}
+.sw button.no.on{background:rgba(51,214,159,.13);border-color:rgba(51,214,159,.5);color:var(--green)}
+
+.timer{font-family:var(--mono);font-size:34px;letter-spacing:.06em;color:var(--amber);line-height:1}
+.msg{
+  border-radius:12px;padding:13px 14px;font-size:12.5px;line-height:1.75;position:relative;
+  background:#0A0F15;border:1px solid rgba(255,255,255,.1);
+}
+.msg .from{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.14em;margin-bottom:7px}
+.msg.me{background:rgba(255,176,32,.08);border-color:rgba(255,176,32,.35)}
+
+.step{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+.step .n{
+  flex:0 0 24px;height:24px;border-radius:7px;display:grid;place-items:center;
+  font-family:var(--mono);font-size:11px;background:rgba(255,176,32,.14);color:var(--amber);
+  border:1px solid rgba(255,176,32,.35);
+}
+.step .c{font-size:12.5px;line-height:1.7;color:#B9C6D2;padding-top:2px}
+.step .c b{color:var(--text);font-weight:600}
+
+/* ---------- right panel ---------- */
+.panel{border:1px solid rgba(255,255,255,.08);border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.008));padding:24px}
+.panel h3{font-family:var(--serif);font-size:20px;margin:0 0 6px}
+.panel .lead{font-size:12.5px;color:var(--muted);line-height:1.85;margin:0 0 20px}
+
+.gauge{display:flex;gap:24px;align-items:center;margin-bottom:22px}
+.ring{position:relative;width:132px;height:132px;flex:0 0 132px}
+.ring svg{transform:rotate(-90deg)}
+.ring .val{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ring .val .num{font-family:var(--mono);font-size:32px;line-height:1;color:var(--amber)}
+.ring .val .lb{font-family:var(--mono);font-size:9.5px;letter-spacing:.24em;color:var(--muted);margin-top:6px}
+.gmeta .lv{font-family:var(--serif);font-size:22px;font-weight:700;margin-bottom:6px}
+.gmeta .tp{font-size:13px;color:#B9C6D2;line-height:1.8}
+
+table.kv{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+table.kv td{padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07);vertical-align:top;line-height:1.7}
+table.kv td:first-child{color:var(--muted);width:104px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;padding-right:14px}
+
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:16px}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:99px;margin-right:6px}
+
+.note{
+  margin-top:22px;padding:14px 16px;border-radius:14px;font-size:12px;line-height:1.8;
+  border:1px dashed rgba(255,176,32,.35);color:#C9B48A;background:rgba(255,176,32,.045);
+}
+.foot{margin-top:30px;font-family:var(--mono);font-size:10.5px;color:#4E5A66;letter-spacing:.12em;line-height:2}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="mark"></div>
+      <div>
+        <h1>青盾</h1>
+        <div class="sub">QINGDUN · ANTI-FRAUD SHIELD</div>
+      </div>
+    </div>
+    <div class="tagline">
+      面向在校青年的 AI 反诈联防平台<br>
+      参赛方向 <b>青年群体服务</b> · 第十七届“工行杯”
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- ============ PHONE ============ -->
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="notch"><i></i></div>
+        <div class="screen">
+
+          <div class="appbar">
+            <span class="dot"></span>
+            <span>青盾 · 已连接工行风控</span>
+            <span class="who">同学 A</span>
+          </div>
+
+          <!-- ---------- pane 1 ---------- -->
+          <section class="pane on" id="p1">
+            <h2 class="sec">可疑信息体检</h2>
+            <p class="hint">把对方发来的话贴进来，或选一个示例。青盾会在 3 秒内告诉你这是哪一类诈骗、对方下一步会说什么。</p>
+            <textarea id="input" placeholder="例：加我微信，先垫付50元做任务，完成三单一起返现……"></textarea>
+            <div class="chips">
+              <span class="chip" data-demo="0">刷单返利</span>
+              <span class="chip" data-demo="1">冒充客服</span>
+              <span class="chip" data-demo="2">杀猪盘</span>
+              <span class="chip" data-demo="3">冒充公检法</span>
+              <span class="chip" data-demo="4">游戏交易</span>
+              <span class="chip" data-demo="5">贷款代办</span>
+            </div>
+            <button class="btn" id="scan">开 始 检 测</button>
+          </section>
+
+          <!-- ---------- pane 2 ---------- -->
+          <section class="pane" id="p2">
+            <div class="card alert" id="verdict">
+              <div class="kt">判定结果</div>
+              <div class="row">
+                <span class="badge b-red" id="vLevel">高风险</span>
+                <span class="badge b-muted" id="vScore">风险分 --</span>
+              </div>
+              <div class="big" style="margin-top:12px" id="vType">—</div>
+              <div class="txt" style="margin-top:8px" id="vNext">—</div>
+              <ul class="sig" id="vSig"></ul>
+            </div>
+
+            <div class="card warn">
+              <div class="kt">转账前 15 秒 · 自检</div>
+              <div id="qs"></div>
+            </div>
+
+            <div class="card">
+              <div class="kt">冷静期</div>
+              <div class="row" style="justify-content:space-between;align-items:flex-end">
+                <div class="timer" id="timer">15</div>
+                <span class="badge b-amber" id="tState">计时中</span>
+              </div>
+              <p class="txt" style="margin:12px 0 0">倒计时结束前无法继续转账。若任意一道自检为“是”，将直接升级为高风险并触发同伴联动。</p>
+            </div>
+
+            <div class="row" style="gap:10px">
+              <button class="btn danger" id="toLink" disabled>继续转账</button>
+              <button class="btn ghost" id="back1" style="flex:0 0 118px">重新检测</button>
+            </div>
+          </section>
+
+          <!-- ---------- pane 3 ---------- -->
+          <section class="pane" id="p3">
+            <div class="card alert">
+              <div class="kt">已触发 · 隐私最小化联动</div>
+              <p class="txt" style="margin:0">以下消息<b>不含金额、不含聊天内容、不含转账对象</b>，仅告知“存在高风险事件”。</p>
+            </div>
+
+            <div class="msg">
+              <div class="from">发给：紧急联系人（室友 B）</div>
+              【青盾】你的同学 A 触发了高风险反诈提醒，请尽快联系他本人确认。
+            </div>
+            <div style="height:8px"></div>
+            <div class="msg">
+              <div class="from">发给：辅导员</div>
+              【青盾】你班学生 A 触发高风险反诈提醒（类型：<span id="mType">—</span>），建议以关心方式联系。事件详情需本人授权后查看。
+            </div>
+            <div style="height:8px"></div>
+            <div class="msg me">
+              <div class="from">学生端 · 你可随时撤回</div>
+              <button class="btn ghost" id="revoke" style="width:auto;padding:8px 14px;font-size:12px">撤回本次通知（60 秒内）</button>
+            </div>
+
+            <div class="card" style="margin-top:16px">
+              <div class="kt">可提交给保卫处 / 反诈中心的事件摘要</div>
+              <table class="kv">
+                <tr><td>时间</td><td id="sTime">2026-09-20 21:20</td></tr>
+                <tr><td>类型</td><td id="sType">—</td></tr>
+                <tr><td>动作节点</td><td>平台内自检触发 → 冷静期未通过 → 已通知紧急联系人</td></tr>
+                <tr><td>隐私</td><td>不含金额、账户号与聊天原文</td></tr>
+              </table>
+            </div>
+
+            <button class="btn ghost" id="back2">返回，重新演示</button>
+          </section>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PANEL ============ -->
+    <div class="panel">
+      <h3>为什么是“转账前 15 秒”</h3>
+      <p class="lead">2025 年湖北电诈受骗人中，16—35 岁占 <b>45.86%</b>，其中“00 后”占 <b>21.5%</b>、同比上升 6.37 个百分点。刷单返利、虚假投资、虚假购物三类合计占全部案件近 <b>55%</b>——它们有一个共同特征：<b>转账动作发生在深夜、陌生对手方、金额递增的窗口里</b>。提醒放在事后等于没有提醒。</p>
+
+      <div class="gauge">
+        <div class="ring">
+          <svg width="132" height="132" viewBox="0 0 132 132">
+            <circle cx="66" cy="66" r="56" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="10"/>
+            <circle id="arc" cx="66" cy="66" r="56" fill="none" stroke="#FFB020" stroke-width="10"
+                    stroke-linecap="round" stroke-dasharray="352" stroke-dashoffset="352"
+                    style="transition:stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1),stroke .4s"/>
+          </svg>
+          <div class="val"><div><div class="num" id="ringNum">--</div><div class="lb">RISK</div></div></div>
+        </div>
+        <div class="gmeta">
+          <div class="lv" id="ringLv">等待检测</div>
+          <div class="tp" id="ringTp">在左侧输入一段可疑话术，看看青盾如何判定；右侧指标会同步变化。</div>
+        </div>
+      </div>
+
+      <table class="kv">
+        <tr><td>干预时点</td><td>确认转账前，而非交易完成后</td></tr>
+        <tr><td>提醒表达</td><td>给诈骗类型标签与下一步剧本，而非抽象风险分</td></tr>
+        <tr><td>联动原则</td><td>只传“有高风险事件”，不传金额与聊天内容</td></tr>
+        <tr><td>可解释</td><td>规则引擎兜底，每条提醒都展示命中信号</td></tr>
+        <tr><td>落地方式</td><td>复用手机银行 / 工银 e 生活渠道 + 行内风控策略插件</td></tr>
+      </table>
+
+      <div class="legend">
+        <span><i style="background:#FF3D2E"></i>高风险 ≥85</span>
+        <span><i style="background:#FFB020"></i>中风险 60–84</span>
+        <span><i style="background:#33D69F"></i>低风险 &lt;60</span>
+      </div>
+
+      <div class="note">
+        这是<b>交互原型</b>（本地运行、无联网、无真实数据）。判定逻辑为可解释的规则演示，用于向评委展示“识别 → 冷静期 → 隐私最小化联动”的完整链路；正式方案中的识别引擎为大模型语义判断 + 轻量分类模型 + 规则兜底。
+      </div>
+
+      <div class="foot">
+        青盾 · 交互原型 v1 ｜ 2026-09-20<br>
+        第十七届“工行杯”全国大学生金融科技创新大赛 ｜ 方向：青年群体服务
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const DEMOS = [
+  "加我微信做任务，先垫付50元，佣金8元马上返。今天有个连单任务，垫付800元完成后一起返现。如果操作超时账户会被冻结，需要再充值2000元解冻。",
+  "您好，我是电商客服，您的订单异常需要退款，请下载会议软件并开启屏幕共享，按我说的操作验证资金流水，稍后把收到的验证码念给我就可以了。",
+  "宝贝，我在这个平台跟着老师带单，稳赚不赔，你先投5000试试，提现很快的。我们一起规划未来，你信我就对了。",
+  "我是市公安局民警，你的身份信息涉嫌一起洗钱案件，需要你配合调查。请把钱转入我们的安全账户核查，案件未结前不得告诉任何人。",
+  "兄弟，你这游戏账号我出价800收，走我们这个交易平台，先交200元保证金和300元手续费，认证通过后一起打给你。",
+  "无抵押、无征信、秒批5万，只需先交1000元保证金和刷流水费用，今天之内办理还能免息。"
+];
+
+const RULES = [
+  {name:"刷单返利类", kw:["刷单","返利","垫付","连单","做任务","佣金","日结","返现","解冻","充值","兼职","超时"],
+   next:"接下来对方大概率会让你“做连单”“补单”，或声称“账户冻结需充值解冻”。刷单返利是 2025 年发案占比最高的类型（25.01%），也是变种最多的一类。"},
+  {name:"冒充客服/物流类", kw:["客服","退款","订单异常","屏幕共享","验证码","理赔","快递","物流","退款链接"],
+   next:"下一步对方会诱导你开启屏幕共享或念出短信验证码，从而直接操作你的账户。正规平台退款不会要求共享屏幕或提供验证码。"},
+  {name:"虚假投资/杀猪盘类", kw:["投资","带单","稳赚","内幕","平台","提现","数字货币","婚恋","交友","见面","宝贝"],
+   next:"下一步是“小赚提现成功”建立信任，随后在你想大额提现时以“缴纳保证金/税费”为由继续要钱。该类是大额案件主力，占大额案件 73.8%。"},
+  {name:"冒充公检法类", kw:["公安","民警","检察院","法院","涉案","安全账户","通缉","配合调查","洗钱","不得告诉"],
+   next:"下一步会以“案件保密”为由要求你隔绝外界、独自转账。公检法机关从不存在“安全账户”，也不会要求转账核查。"},
+  {name:"游戏交易类", kw:["游戏","账号","装备","皮肤","代练","交易平台","保证金","解冻费"],
+   next:"下一步会以“平台风控”“账号冻结”为由反复索要保证金与解冻费，金额逐次抬高。"},
+  {name:"贷款代办类", kw:["贷款","征信","额度","刷流水","保证金","无抵押","手续费","秒批","免息"],
+   next:"下一步以“刷流水提升额度”“缴纳保证金”为由要钱，正规放款前不会收取任何费用。"}
+];
+
+const BEHAV = [
+  {kw:["不要告诉","不得告诉","保密","别跟"], label:"要求保密"},
+  {kw:["马上","立刻","今天之内","抓紧","赶紧","尽快"], label:"催促施压"},
+  {kw:["垫付","充值","转过去","打给我","先交","先转"], label:"诱导先付钱"},
+  {kw:["屏幕共享","念出","验证码","发我验证码"], label:"索要验证码/共享屏幕"},
+  {kw:["安全账户","配合调查","涉案"], label:"伪造执法身份"},
+  {kw:["冻结","解冻","超时"], label:"制造冻结恐慌"},
+  {kw:["保证金","手续费","刷流水"], label:"前置收费"}
+];
+
+let answered = {0:null,1:null,2:null};
+let countdown = null;
+
+function q(id){return document.getElementById(id)}
+function show(id){["p1","p2","p3"].forEach(p=>q(p).classList.toggle("on",p===id))}
+
+function classify(text){
+  const t = text || "";
+  let best = null, hit = [];
+  RULES.forEach(r=>{
+    const m = r.kw.filter(k=>t.includes(k));
+    if(m.length > (best ? best.m.length : 0)) { best = {r:r, m:m}; }
+  });
+  const sig = [];
+  BEHAV.forEach(b=>{ if(b.kw.some(k=>t.includes(k))) sig.push(b.label) });
+  let score = 18;
+  if(best){ score += Math.min(46, 22 + best.m.length*6); hit = best.m; }
+  score += Math.min(30, sig.length*8);
+  const money = t.match(/\d{2,6}/g);
+  if(money) score += Math.min(14, money.length*4);
+  if(t.length > 60) score += 4;
+  score = Math.max(6, Math.min(98, Math.round(score)));
+  return {score:score, type: best ? best.r.name : "未匹配到已知类型", next: best ? best.r.next : "未命中已知话术库，但若涉及转账请谨慎核实对方身份，必要时联系辅导员或拨打 96110。", sig: sig};
+}
+
+function paint(res){
+  const isHigh = res.score >= 85, isMid = res.score >= 60 && res.score < 85;
+  const color = isHigh ? "#FF3D2E" : (isMid ? "#FFB020" : "#33D69F");
+  const lv = isHigh ? "高风险" : (isMid ? "中风险" : "低风险");
+  const arc = q("arc"), off = 352 - 352*(res.score/100);
+  arc.setAttribute("stroke-dashoffset", off); arc.setAttribute("stroke", color);
+  q("ringNum").textContent = res.score; q("ringNum").style.color = color;
+  q("ringLv").textContent = lv + " · " + res.type;
+  q("ringTp").textContent = res.sig.length ? ("命中信号：" + res.sig.join(" / ")) : "未命中行为类信号。";
+
+  q("vType").textContent = res.type;
+  q("vNext").textContent = res.next;
+  q("vLevel").textContent = lv;
+  q("vLevel").className = "badge " + (isHigh ? "b-red" : (isMid ? "b-amber" : "b-green"));
+  q("vScore").textContent = "风险分 " + res.score;
+  q("mType").textContent = res.type; q("sType").textContent = res.type;
+  const sig = q("vSig"); sig.innerHTML = "";
+  res.sig.concat(res.sig.length ? [] : ["无行为信号"]).forEach(s=>{
+    const li = document.createElement("li"); li.textContent = s; sig.appendChild(li);
+  });
+  q("verdict").className = "card " + (isHigh ? "alert" : (isMid ? "warn" : "ok"));
+  return isHigh;
+}
+
+const QUESTIONS = [
+  "对方是否要求你对家人、朋友或老师保密？",
+  "对方是否一直在催促你“马上”“今天之内”办完？",
+  "对方是否让你先垫付、先充值，或索要验证码 / 要求共享屏幕？"
+];
+
+function resetQuestions(){
+  answered = {0:null,1:null,2:null};
+  const box = q("qs"); box.innerHTML = "";
+  QUESTIONS.forEach((text,i)=>{
+    const d = document.createElement("div"); d.className = "q";
+    d.innerHTML = '<p>'+(i+1)+'. '+text+'</p><div class="sw"><button class="yes" data-i="'+i+'" data-v="1">是</button><button class="no" data-i="'+i+'" data-v="0">否</button></div>';
+    box.appendChild(d);
+  });
+  box.querySelectorAll("button").forEach(b=>{
+    b.addEventListener("click",()=>{
+      const i = +b.dataset.i, v = +b.dataset.v;
+      answered[i] = v;
+      const sib = b.parentElement.querySelectorAll("button");
+      sib.forEach(x=>x.classList.remove("on")); b.classList.add("on");
+      if(v===1){ startCountdown(true); }
+    });
+  });
+}
+
+function startCountdown(instant){
+  clearInterval(countdown);
+  let n = instant ? 3 : 15;
+  q("toLink").disabled = true;
+  q("tState").textContent = instant ? "高风险 · 锁定" : "计时中";
+  q("tState").className = "badge " + (instant ? "b-red" : "b-amber");
+  q("timer").textContent = n;
+  countdown = setInterval(()=>{
+    n -= 1; q("timer").textContent = n;
+    if(n <= 0){
+      clearInterval(countdown);
+      q("toLink").disabled = false;
+      q("tState").textContent = instant ? "高风险 · 已通知" : "可继续";
+      q("tState").className = "badge " + (instant ? "b-red" : "b-green");
+      if(instant){
+        q("toLink").textContent = "继续转账（已通知联系人）";
+        setTimeout(()=>show("p3"), 420);
+      }
+    }
+  }, 1000);
+}
+
+q("scan").addEventListener("click",()=>{
+  const res = classify(q("input").value);
+  const isHigh = paint(res);
+  resetQuestions();
+  show("p2");
+  startCountdown(false);
+  if(isHigh){ q("timer").textContent = "15"; }
+});
+
+q("back1").addEventListener("click",()=>{ clearInterval(countdown); show("p1"); });
+q("back2").addEventListener("click",()=>{ clearInterval(countdown); show("p1"); });
+
+document.querySelectorAll(".chip").forEach(c=>{
+  c.addEventListener("click",()=>{
+    q("input").value = DEMOS[+c.dataset.demo];
+    q("input").focus();
+  });
+});
+
+q("revoke").addEventListener("click",()=>{
+  q("revoke").textContent = "已撤回 ✓";
+  q("revoke").disabled = true;
+});
+
+q("toLink").addEventListener("click",()=>{ show("p3"); });
+</script>
+</body>
+</html>
